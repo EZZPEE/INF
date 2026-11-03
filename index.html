@@ -34,6 +34,7 @@
     body {
       margin: 0;
       min-height: 100vh;
+      overflow-x: hidden;
       font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text);
       background:
@@ -341,48 +342,136 @@
 
     @media (max-width: 640px) {
       :root {
-        --ambient-x: 20%;
-        --ambient-y: 18%;
-        --card-glow-x: 22%;
-        --card-glow-y: 18%;
-        --card-tilt: 110deg;
+        --ambient-x: 16%;
+        --ambient-y: 14%;
+        --card-glow-x: 18%;
+        --card-glow-y: 14%;
+        --card-tilt: 105deg;
       }
 
       .shell {
-        width: min(100% - 1rem, 1200px);
-        padding-top: 1rem;
+        width: min(100% - 0.75rem, 1200px);
+        padding-top: 0.75rem;
+        padding-bottom: 2.5rem;
       }
 
       .topbar {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.8rem;
+        gap: 0.7rem;
+        padding-bottom: 1rem;
+      }
+
+      .brand {
+        font-size: 0.9rem;
+      }
+
+      .brand-mark {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 10px;
+      }
+
+      .pill {
+        font-size: 0.74rem;
+        padding: 0.45rem 0.7rem;
       }
 
       .hero {
-        border-radius: 22px;
-        padding: 1.2rem 1rem 1.3rem;
+        border-radius: 20px;
+        padding: 1rem 0.9rem 1.1rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .hero::before {
+        width: 12rem;
+        height: 12rem;
+        top: -10%;
+        right: -2%;
+      }
+
+      .hero::after {
+        width: 42%;
+        height: 52%;
+        right: 0.4rem;
+        top: 0.8rem;
+      }
+
+      .eyebrow {
+        margin-bottom: 0.7rem;
+        padding: 0.32rem 0.65rem;
+        font-size: 0.64rem;
+        letter-spacing: 0.08em;
+      }
+
+      h1 {
+        font-size: clamp(1.9rem, 12vw, 2.5rem);
+        line-height: 1.1;
+      }
+
+      .subtitle {
+        margin-top: 0.7rem;
+        font-size: 0.96rem;
+        line-height: 1.5;
       }
 
       .stats {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.6rem;
+        margin-top: 1rem;
+      }
+
+      .stat {
+        min-width: 0;
+        padding: 0.7rem 0.55rem;
+      }
+
+      .stat strong {
+        font-size: 1.05rem;
+      }
+
+      .stat span {
+        font-size: 0.65rem;
+      }
+
+      .section-head {
+        margin: 1.2rem 0 0.7rem;
+      }
+
+      .section-title {
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
       }
 
       .grid {
         grid-template-columns: 1fr;
+        gap: 0.8rem;
       }
 
       .card {
-        padding: 1rem 1rem 0.95rem;
+        gap: 0.65rem;
+        padding: 0.9rem 0.9rem 0.8rem;
+        border-radius: 16px;
+      }
+
+      .tag {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.62rem;
       }
 
       .card h2 {
-        font-size: 1.12rem;
+        font-size: 1.08rem;
       }
 
       .card p {
-        font-size: 0.92rem;
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      .card footer {
+        padding-top: 0.55rem;
+        font-size: 0.78rem;
       }
     }
   </style>
@@ -470,13 +559,15 @@
   <script>
     const root = document.documentElement;
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 
     function updateMotionVisuals(x, y) {
-      const ambientX = clamp(18 + x * 22, 8, 42);
-      const ambientY = clamp(16 + y * 20, 8, 36);
-      const glowX = clamp(18 + x * 24, 10, 72);
-      const glowY = clamp(16 + y * 22, 8, 38);
-      const tilt = 110 + x * 45;
+      const intensity = isTouchDevice ? 0.45 : 1;
+      const ambientX = clamp(18 + x * 22 * intensity, 8, 42);
+      const ambientY = clamp(16 + y * 20 * intensity, 8, 36);
+      const glowX = clamp(18 + x * 24 * intensity, 10, 72);
+      const glowY = clamp(16 + y * 22 * intensity, 8, 38);
+      const tilt = 110 + x * 45 * intensity;
 
       root.style.setProperty('--ambient-x', `${ambientX}%`);
       root.style.setProperty('--ambient-y', `${ambientY}%`);
@@ -488,7 +579,7 @@
     function handleOrientation(event) {
       const gamma = clamp((Number(event.gamma || 0) / 30), -1, 1);
       const beta = clamp((Number(event.beta || 0) / 35), -1, 1);
-      updateMotionVisuals(gamma, -beta);
+      updateMotionVisuals(gamma * 0.7, -beta * 0.7);
     }
 
     function handlePointerMove(event) {
@@ -497,14 +588,17 @@
       updateMotionVisuals(x, -y);
     }
 
-    if (window.DeviceOrientationEvent) {
+    if (window.DeviceOrientationEvent && isTouchDevice) {
       window.addEventListener('deviceorientation', handleOrientation, { passive: true });
     }
 
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    if (!isTouchDevice) {
+      window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    }
+
     window.addEventListener('orientationchange', () => {
       const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-      updateMotionVisuals(isLandscape ? 0.7 : -0.2, isLandscape ? -0.3 : 0.2);
+      updateMotionVisuals(isLandscape ? 0.5 : -0.15, isLandscape ? -0.25 : 0.15);
     });
 
     updateMotionVisuals(0, 0);

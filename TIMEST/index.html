@@ -27,6 +27,7 @@
       min-height: 100vh;
       margin: 0;
       color: var(--ink);
+      overflow-x: hidden;
       background:
         radial-gradient(ellipse at 74% 44%, rgba(226, 218, 198, .48), transparent 38%),
         var(--paper);
@@ -47,6 +48,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       border-bottom: 1px solid var(--line);
     }
 
@@ -195,6 +197,8 @@
       font-weight: 700;
       letter-spacing: .08em;
       transition: border-color .2s, color .2s, background .2s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .format-button:hover, .live-time-button:hover:not(:disabled) {
@@ -400,6 +404,8 @@
       font-size: 12px;
       font-weight: 650;
       transition: transform .2s, background .2s, border-color .2s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .chrono-button:hover:not(:disabled) {
@@ -719,9 +725,15 @@
     footer span:last-child { text-align: right; }
 
     @media (max-width: 760px) {
-      .page-shell { width: min(100% - 40px, 540px); }
-      .topbar { height: 72px; }
-      .top-note { font-size: 9px; }
+      .page-shell { width: min(100% - 32px, 540px); }
+      .topbar {
+        height: auto;
+        min-height: 72px;
+        padding: 16px 0 0;
+        flex-wrap: wrap;
+      }
+      .brand, .top-note { flex: 1 1 auto; }
+      .top-note { justify-content: flex-end; font-size: 9px; }
       main {
         grid-template-columns: 1fr;
         gap: 32px;
@@ -762,10 +774,8 @@
 </head>
 <body>
   <div class="page-shell">
-    <div class="topbar" style="height:auto; padding-top:24px; border-bottom:0;">
-      <a class="back-link" href="../index.html">← Inicio</a>
-    </div>
     <header class="topbar">
+      <a class="back-link" href="../index.html">← Inicio</a>
       <div class="brand"><span class="brand-mark" aria-hidden="true">t</span> TIMEST</div>
       <div class="top-note"><span class="live-dot" aria-hidden="true"></span> Hora local en directo</div>
     </header>

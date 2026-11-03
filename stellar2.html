@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STELLAR 2 — Efecto estelar</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Inter, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, rgba(148, 163, 255, 0.18), transparent 35%), #000;
+    }
+
+    .home-link {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(11, 13, 24, 0.6);
+      color: #edf6ff;
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+    }
+
+    .home-link:hover {
+      border-color: rgba(126, 200, 255, 0.5);
+      color: #bfe7ff;
+    }
+  </style>
+</head>
+
+<body>
+  <a class="home-link" href="index.html">← Volver al índice</a>
+  <script src="assets/js/stars.js"></script>
+</body>
+
+</html>

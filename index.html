@@ -560,14 +560,21 @@
     const root = document.documentElement;
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
     const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+    const motionState = { x: 0, y: 0 };
 
     function updateMotionVisuals(x, y) {
-      const intensity = isTouchDevice ? 0.45 : 1;
-      const ambientX = clamp(18 + x * 22 * intensity, 8, 42);
-      const ambientY = clamp(16 + y * 20 * intensity, 8, 36);
-      const glowX = clamp(18 + x * 24 * intensity, 10, 72);
-      const glowY = clamp(16 + y * 22 * intensity, 8, 38);
-      const tilt = 110 + x * 45 * intensity;
+      const targetX = clamp(x, -1, 1);
+      const targetY = clamp(y, -1, 1);
+      const smoothing = isTouchDevice ? 0.08 : 0.18;
+      motionState.x += (targetX - motionState.x) * smoothing;
+      motionState.y += (targetY - motionState.y) * smoothing;
+
+      const intensity = isTouchDevice ? 0.38 : 1;
+      const ambientX = clamp(18 + motionState.x * 14 * intensity, 10, 34);
+      const ambientY = clamp(16 + motionState.y * 12 * intensity, 10, 30);
+      const glowX = clamp(18 + motionState.x * 18 * intensity, 10, 70);
+      const glowY = clamp(16 + motionState.y * 16 * intensity, 10, 38);
+      const tilt = 110 + motionState.x * 26 * intensity;
 
       root.style.setProperty('--ambient-x', `${ambientX}%`);
       root.style.setProperty('--ambient-y', `${ambientY}%`);
@@ -579,7 +586,7 @@
     function handleOrientation(event) {
       const gamma = clamp((Number(event.gamma || 0) / 30), -1, 1);
       const beta = clamp((Number(event.beta || 0) / 35), -1, 1);
-      updateMotionVisuals(gamma * 0.7, -beta * 0.7);
+      updateMotionVisuals(gamma * 0.6, -beta * 0.5);
     }
 
     function handlePointerMove(event) {
@@ -598,7 +605,7 @@
 
     window.addEventListener('orientationchange', () => {
       const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-      updateMotionVisuals(isLandscape ? 0.5 : -0.15, isLandscape ? -0.25 : 0.15);
+      updateMotionVisuals(isLandscape ? 0.35 : -0.1, isLandscape ? -0.2 : 0.12);
     });
 
     updateMotionVisuals(0, 0);

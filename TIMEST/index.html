@@ -28,6 +28,7 @@
       margin: 0;
       color: var(--ink);
       overflow-x: hidden;
+      overscroll-behavior-y: contain;
       background:
         radial-gradient(ellipse at 74% 44%, rgba(226, 218, 198, .48), transparent 38%),
         var(--paper);
@@ -736,31 +737,67 @@
       .top-note { justify-content: flex-end; font-size: 9px; }
       main {
         grid-template-columns: 1fr;
-        gap: 32px;
-        padding: 52px 0 42px;
+        gap: 28px;
+        padding: 34px 0 26px;
       }
-      .chronograph { padding: 32px 0 42px; }
-      .chrono-panel { grid-template-columns: 1fr; gap: 25px; }
-      .chrono-main, .chrono-side, .lap-list { grid-column: 1; grid-row: auto; }
-      .chrono-side { min-height: 150px; gap: 12px; }
-      .chrono-subdial { width: min(140px, 43%); }
-      .lap-list { max-height: 150px; }
       .intro { order: 2; }
       .clock-stage {
         order: 1;
         width: min(100%, 430px);
         justify-self: center;
+        margin-top: -10px;
       }
       .eyebrow { margin-bottom: 18px; }
-      h1 { max-width: 500px; font-size: clamp(48px, 12vw, 68px); }
-      .intro-copy { margin-top: 17px; }
-      .time-readout { margin-top: 30px; }
+      h1 { max-width: 500px; font-size: clamp(46px, 12vw, 66px); }
+      .intro-copy { margin-top: 17px; font-size: 14px; }
+      .time-readout { margin-top: 26px; }
+      .chronograph { padding: 28px 0 38px; }
+      .chrono-panel {
+        grid-template-columns: 1fr;
+        gap: 18px;
+        min-height: 0;
+        padding: 22px 16px 18px;
+      }
+      .chrono-main, .chrono-side, .lap-list { grid-column: 1; grid-row: auto; }
+      .chrono-main { padding-right: 0; }
+      .chrono-side {
+        min-height: 150px;
+        gap: 12px;
+        justify-content: flex-start;
+      }
+      .chrono-subdial { width: min(140px, 42%); }
+      .chrono-actions { margin-top: 20px; }
+      .chrono-button {
+        min-width: 88px;
+        padding: 10px 14px;
+      }
+      .lap-list { max-height: 150px; padding: 0 2px; }
+      .lap-row {
+        gap: 10px;
+        padding: 10px 0;
+        font-size: 11px;
+      }
     }
 
     @media (max-width: 420px) {
-      .page-shell { width: calc(100% - 32px); }
+      .page-shell { width: calc(100% - 28px); }
+      .brand { letter-spacing: .12em; font-size: 12px; }
+      .back-link {
+        padding: 8px 10px;
+        letter-spacing: .08em;
+      }
       .top-note { letter-spacing: .04em; }
       .clock-stage { width: 100%; }
+      .readout-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .readout-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+      .chrono-display { gap: 2px; }
       footer { font-size: 10px; }
     }
 

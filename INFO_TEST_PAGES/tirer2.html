@@ -1,0 +1,576 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buscador de imágenes web</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  font-family: Arial, sans-serif;
+  background: #10131a;
+  color: #eee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  max-width: 1000px;
+  margin: auto;
+  padding: 35px 20px;
+}
+
+main {
+  background: #191e29;
+  border: 1px solid #303747;
+  border-radius: 14px;
+  padding: 25px;
+}
+
+h1 {
+  margin-top: 0;
+}
+
+input {
+  width: 100%;
+  padding: 13px;
+  background: #10131a;
+  color: white;
+  border: 1px solid #46516a;
+  border-radius: 7px;
+  margin-top: 8px;
+}
+
+input:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #c4b5fd;
+  outline-offset: 3px;
+}
+
+label {
+  display: block;
+  margin-top: 18px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+button {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  font-weight: bold;
+  background: #8b5cf6;
+  color: white;
+}
+
+button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled),
+.image-card a:hover {
+  filter: brightness(1.12);
+}
+
+#stop {
+  background: #a33d4c;
+}
+
+#clear {
+  background: #46516a;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.stat {
+  background: #10131a;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.stat strong {
+  display: block;
+  font-size: 25px;
+  color: #a78bfa;
+  margin-top: 7px;
+}
+
+#status {
+  margin-top: 20px;
+  color: #c4b5fd;
+}
+
+#gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 25px;
+}
+
+.image-card {
+  background: #10131a;
+  padding: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: contain;
+  background: #252c3b;
+}
+
+.image-card a {
+  display: inline-block;
+  margin-top: 8px;
+  color: #c4b5fd;
+  font-size: .9rem;
+  text-decoration: none;
+}
+
+.image-card.image-failed img {
+  opacity: .35;
+}
+
+.image-card small {
+  display: block;
+  margin-top: 7px;
+  overflow-wrap: anywhere;
+  color: #aab4c8;
+}
+
+#errors {
+  margin-top: 20px;
+  color: #ff8585;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+</style>
+</head>
+
+<body>
+
+<main>
+
+<h1>Buscador de imágenes web</h1>
+
+<p>
+Introduce la dirección de una página para encontrar las imágenes que
+aparecen en los elementos, atributos y estilos de su HTML. Podrás abrir
+cada archivo o descargarlo.
+</p>
+
+<label for="website">URL de la página web</label>
+<input
+  id="website"
+  type="url"
+  autocomplete="url"
+  spellcheck="false"
+  placeholder="https://ejemplo.com"
+>
+
+<div class="controls">
+  <button id="start">Buscar imágenes</button>
+  <button id="stop" disabled>Detener</button>
+  <button id="clear">Limpiar resultados</button>
+</div>
+
+<p>
+  Nota: algunos sitios no permiten leer su HTML desde otra web (CORS).
+  En ese caso, prueba con una página que permita acceso o sirve esta
+  herramienta desde el mismo dominio. La descarga directa también depende
+  de los permisos del servidor de imágenes.
+</p>
+
+<div class="stats">
+
+  <div class="stat">
+    Encontradas
+    <strong id="found">0</strong>
+  </div>
+
+  <div class="stat">
+    Comprobadas
+    <strong id="checked">0</strong>
+  </div>
+
+  <div class="stat">
+    Disponibles
+    <strong id="loaded">0</strong>
+  </div>
+
+  <div class="stat">
+    No disponibles
+    <strong id="failed">0</strong>
+  </div>
+
+</div>
+
+<p id="status" role="status" aria-live="polite">
+Preparado.
+</p>
+
+<div id="errors"></div>
+
+<section id="gallery" aria-label="Imágenes encontradas"></section>
+
+</main>
+
+<script>
+const website = document.querySelector("#website");
+const startButton = document.querySelector("#start");
+const stopButton = document.querySelector("#stop");
+const clearButton = document.querySelector("#clear");
+
+const gallery = document.querySelector("#gallery");
+const status = document.querySelector("#status");
+const errors = document.querySelector("#errors");
+
+const foundElement = document.querySelector("#found");
+const checkedElement = document.querySelector("#checked");
+const loadedElement = document.querySelector("#loaded");
+const failedElement = document.querySelector("#failed");
+
+let running = false;
+let controller = null;
+let scanToken = 0;
+const activeImageCancellations = new Set();
+
+function updateStats(found, checked, loaded, failed) {
+  foundElement.textContent = found;
+  checkedElement.textContent = checked;
+  loadedElement.textContent = loaded;
+  failedElement.textContent = failed;
+}
+
+function cancelImageLoads() {
+  for (const cancel of [...activeImageCancellations]) {
+    cancel();
+  }
+}
+
+function clearResults() {
+  scanToken++;
+  cancelImageLoads();
+
+  gallery.replaceChildren();
+
+  errors.textContent = "";
+
+  updateStats(0, 0, 0, 0);
+  status.textContent = "Preparado.";
+}
+
+function addError(message) {
+  const line = document.createElement("div");
+  line.textContent = message;
+  errors.append(line);
+}
+
+function getSrcsetURLs(srcset) {
+  if (!srcset) return [];
+
+  return srcset
+    .split(",")
+    .map(candidate => candidate.trim().split(/\s+/, 2)[0])
+    .filter(Boolean);
+}
+
+function collectImages(html, baseURL) {
+  const documentHTML = new DOMParser()
+    .parseFromString(html, "text/html");
+  const declaredBase = documentHTML.querySelector("base[href]")?.getAttribute("href");
+  const imageBase = declaredBase ? new URL(declaredBase, baseURL).href : baseURL;
+  const discovered = new Set();
+  const imageFilePattern = /\.(?:avif|bmp|gif|jpe?g|png|svg|webp|tiff?)(?:$|[?#])/i;
+  const imageAttributePattern = /(?:image|img|photo|picture|thumbnail|thumb|background|poster|cover|banner)/i;
+  const directImageAttributes = new Set([
+    "src",
+    "data-src",
+    "data-original",
+    "data-lazy-src",
+    "data-original-src",
+    "data",
+    "poster",
+    "background",
+    "xlink:href"
+  ]);
+  const cssURLPattern = /url\(\s*(['"]?)(.*?)\1\s*\)/gi;
+
+  function addCandidate(candidate) {
+    if (!candidate || candidate.startsWith("data:")) return;
+
+    try {
+      const absoluteURL = new URL(candidate, imageBase);
+
+      if (["http:", "https:"].includes(absoluteURL.protocol)) {
+        absoluteURL.hash = "";
+        discovered.add(absoluteURL.href);
+      }
+    } catch {
+      // Las referencias inválidas no son recursos descargables.
+    }
+  }
+
+  function addCSSURLs(value) {
+    for (const match of value.matchAll(cssURLPattern)) {
+      addCandidate(match[2]);
+    }
+  }
+
+  for (const element of documentHTML.querySelectorAll("*")) {
+    const tagName = element.localName.toLowerCase();
+    const isImageElement = ["img", "image"].includes(tagName) ||
+      (tagName === "input" && element.getAttribute("type")?.toLowerCase() === "image");
+    const isPictureSource = tagName === "source" &&
+      element.parentElement?.localName.toLowerCase() === "picture";
+
+    for (const attribute of element.attributes) {
+      const name = attribute.name.toLowerCase();
+      const value = attribute.value.trim();
+
+      if (name === "srcset" || name === "data-srcset") {
+        getSrcsetURLs(value).forEach(addCandidate);
+        continue;
+      }
+
+      addCSSURLs(value);
+
+      const isExplicitImageAttribute = imageAttributePattern.test(name);
+      const isImageURL = imageFilePattern.test(value);
+      const isImageLink = name === "href" && isImageURL;
+      const isImageContent = name === "content" &&
+        /(?:og:image|twitter:image)/i.test(
+          element.getAttribute("property") || element.getAttribute("name") || ""
+        );
+      const isImagePreload = tagName === "link" &&
+        /(?:^|\s)(?:preload|image_src)(?:\s|$)/i.test(element.getAttribute("rel") || "") &&
+        (element.getAttribute("as") === "image" || isImageURL);
+      const isImageSource = name === "src" &&
+        (isImageElement || isPictureSource || isImageURL);
+      const isSvgImageHref = tagName === "image" &&
+        (name === "href" || name === "xlink:href");
+
+      if (
+        isExplicitImageAttribute ||
+        directImageAttributes.has(name) && (isImageElement || name !== "src" || isImageURL) ||
+        isImageLink ||
+        isSvgImageHref ||
+        isImageContent ||
+        isImagePreload ||
+        isImageSource
+      ) {
+        addCandidate(value);
+      }
+    }
+  }
+
+  documentHTML.querySelectorAll("style").forEach(styleElement => {
+    addCSSURLs(styleElement.textContent || "");
+  });
+
+  return [...discovered];
+}
+
+function createCard(url, index) {
+  const card = document.createElement("div");
+  card.className = "image-card";
+
+  const image = document.createElement("img");
+  image.alt = `Imagen ${index + 1}`;
+
+  const description = document.createElement("small");
+  description.textContent = url;
+
+  const openLink = document.createElement("a");
+  openLink.href = url;
+  openLink.target = "_blank";
+  openLink.rel = "noopener noreferrer";
+  openLink.textContent = "Abrir imagen";
+
+  const downloadLink = document.createElement("a");
+  downloadLink.href = url;
+  downloadLink.download = "";
+  downloadLink.target = "_blank";
+  downloadLink.rel = "noopener noreferrer";
+  downloadLink.textContent = "Descargar / abrir";
+  downloadLink.style.marginLeft = "12px";
+
+  card.append(image, openLink, downloadLink, description);
+  gallery.append(card);
+  return { card, image };
+}
+
+async function runScan() {
+  if (running) return;
+
+  let pageURL;
+
+  try {
+    pageURL = new URL(website.value.trim());
+
+    if (!["http:", "https:"].includes(pageURL.protocol)) {
+      throw new Error();
+    }
+  } catch {
+    status.textContent = "Introduce una URL válida.";
+    return;
+  }
+
+  running = true;
+  controller = new AbortController();
+  const currentScan = ++scanToken;
+
+  startButton.disabled = true;
+  stopButton.disabled = false;
+
+  gallery.replaceChildren();
+  errors.replaceChildren();
+  updateStats(0, 0, 0, 0);
+
+  status.textContent = "Descargando HTML de la página...";
+
+  let found = 0;
+  let checked = 0;
+  let loaded = 0;
+  let failed = 0;
+
+  try {
+    const response = await fetch(pageURL.href, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`La página respondió HTTP ${response.status}`);
+    }
+
+    const html = await response.text();
+
+    if (controller.signal.aborted) return;
+
+    const images = collectImages(html, response.url || pageURL.href);
+
+    found = images.length;
+
+    updateStats(found, checked, loaded, failed);
+
+    if (images.length === 0) {
+      status.textContent = "No se encontraron imágenes en el HTML de la página.";
+      return;
+    }
+
+    status.textContent = `Se han encontrado ${found} imágenes. Comprobando archivos...`;
+
+    await Promise.all(images.map((url, index) => new Promise(resolve => {
+      const { card, image } = createCard(url, index);
+      let settled = false;
+
+      function settle(available) {
+        if (settled) return;
+        settled = true;
+        activeImageCancellations.delete(cancel);
+
+        if (currentScan === scanToken && available !== null) {
+          checked++;
+
+          if (available) {
+            loaded++;
+          } else {
+            failed++;
+            card.classList.add("image-failed");
+            addError(`No se pudo cargar: ${url}`);
+          }
+
+          updateStats(found, checked, loaded, failed);
+          status.textContent = checked === found
+            ? `Búsqueda finalizada: ${loaded} disponibles y ${failed} no disponibles.`
+            : `Comprobando ${checked} de ${found} imágenes...`;
+        }
+
+        resolve();
+      }
+
+      function cancel() {
+        settle(null);
+        image.removeAttribute("src");
+      }
+
+      activeImageCancellations.add(cancel);
+      image.addEventListener("load", () => settle(true), { once: true });
+      image.addEventListener("error", () => settle(false), { once: true });
+      image.src = url;
+    })));
+
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      status.textContent =
+        "No se pudo leer la página. Puede que el sitio bloquee solicitudes desde otros dominios (CORS).";
+      addError(error.message || "Error desconocido al solicitar la página.");
+    }
+
+  } finally {
+    if (currentScan === scanToken) {
+      running = false;
+      controller = null;
+      startButton.disabled = false;
+      stopButton.disabled = true;
+    }
+  }
+}
+
+startButton.addEventListener("click", runScan);
+
+stopButton.addEventListener("click", () => {
+  if (controller) {
+    controller.abort();
+  }
+
+  scanToken++;
+  cancelImageLoads();
+  running = false;
+  controller = null;
+  startButton.disabled = false;
+  stopButton.disabled = true;
+  status.textContent = "Análisis detenido.";
+});
+
+clearButton.addEventListener("click", () => {
+  if (controller) {
+    controller.abort();
+  }
+
+  clearResults();
+  running = false;
+  controller = null;
+  startButton.disabled = false;
+  stopButton.disabled = true;
+});
+
+website.addEventListener("keydown", event => {
+  if (event.key === "Enter") runScan();
+});
+</script>
+
+</body>
+</html>

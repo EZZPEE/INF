@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#75b8ff">
+  <title>El tiempo en tu ubicación</title>
+  <link rel="stylesheet" href="css/tiempo.css">
+</head>
+<body data-weather="unknown" data-period="noon">
+  <div class="sky-effects" id="sky-effects" aria-hidden="true">
+    <div class="sky-orb" id="sky-orb"></div>
+    <div class="sky-clouds"></div>
+    <div class="sky-stars" id="sky-stars"></div>
+    <div class="sky-precipitation" id="sky-precipitation"></div>
+    <div class="sky-lightning"></div>
+  </div>
+  <main class="page">
+    <p class="eyebrow">Tu pronóstico local</p>
+    <h1>El tiempo, justo aquí.</h1>
+    <p class="intro">Consulta las condiciones actuales y el pronóstico de cinco días para tu ubicación precisa.</p>
+
+    <section class="weather-card" aria-label="Pronóstico del tiempo">
+      <div class="card-main">
+        <div class="topline">
+          <div>
+            <p class="eyebrow">Ahora</p>
+            <div class="location-line">
+              <span class="location-dot" aria-hidden="true"></span>
+              <span id="location">Ubicación aún no detectada</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="icon-button" id="refresh-button" type="button" aria-label="Actualizar el tiempo" title="Actualizar" disabled>↻</button>
+            <button class="location-button" id="location-button" type="button">Usar mi ubicación</button>
+          </div>
+        </div>
+
+        <div class="weather-now" aria-live="polite">
+          <div>
+            <p class="temperature" id="temperature">--<span>°C</span></p>
+            <p class="condition" id="condition">Permite el acceso para consultar el tiempo</p>
+          </div>
+          <div class="weather-icon" id="weather-icon" aria-hidden="true"></div>
+        </div>
+
+        <p class="message" id="message" role="status">Tu ubicación solo se solicita cuando pulsas el botón.</p>
+
+        <div class="details">
+          <div class="detail">
+            <span class="detail-label">Sensación térmica</span>
+            <span class="detail-value" id="feels-like">—</span>
+          </div>
+          <div class="detail">
+            <span class="detail-label">Humedad</span>
+            <span class="detail-value" id="humidity">—</span>
+          </div>
+          <div class="detail">
+            <span class="detail-label">Viento</span>
+            <span class="detail-value" id="wind">—</span>
+          </div>
+          <div class="detail">
+            <span class="detail-label">Lluvia hoy</span>
+            <span class="detail-value" id="rain">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="forecast">
+        <div class="forecast-heading">
+          <h2>Próximos días</h2>
+          <span id="updated-at">Pronóstico de cinco días</span>
+        </div>
+        <div class="forecast-list" id="forecast-list">
+          <div class="forecast-day"><span class="forecast-name">—</span><span class="forecast-symbol">·</span><span class="forecast-temperatures">—</span></div>
+          <div class="forecast-day"><span class="forecast-name">—</span><span class="forecast-symbol">·</span><span class="forecast-temperatures">—</span></div>
+          <div class="forecast-day"><span class="forecast-name">—</span><span class="forecast-symbol">·</span><span class="forecast-temperatures">—</span></div>
+          <div class="forecast-day"><span class="forecast-name">—</span><span class="forecast-symbol">·</span><span class="forecast-temperatures">—</span></div>
+          <div class="forecast-day"><span class="forecast-name">—</span><span class="forecast-symbol">·</span><span class="forecast-temperatures">—</span></div>
+        </div>
+        <p class="attribution">El pronóstico proviene de Open-Meteo y el nombre del lugar de BigDataCloud. Las coordenadas se consultan solo con tu permiso.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/tiempo.js" defer></script>
+</body>
+</html>

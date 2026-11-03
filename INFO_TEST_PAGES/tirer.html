@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prueba de carga de imágenes</title>
+
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, sans-serif;
+      background: #10131a;
+      color: #eef2ff;
+    }
+
+    body {
+      box-sizing: border-box;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 20px;
+    }
+
+    main {
+      padding: 28px;
+      border: 1px solid #303747;
+      border-radius: 16px;
+      background: #191e29;
+    }
+
+    h1 { margin-top: 0; }
+
+    p {
+      color: #bac4d8;
+      line-height: 1.6;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.9rem;
+    }
+
+    input, button {
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid #46516a;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    input {
+      background: #10131a;
+      color: inherit;
+    }
+
+    input[type="number"] { width: 100px; }
+    input[type="url"] { width: 280px; }
+
+    button {
+      border-color: #748cff;
+      background: #748cff;
+      color: #10131a;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { background: #91a2ff; }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #clear-button {
+      background: #303747;
+      color: #eef2ff;
+      border-color: #46516a;
+    }
+
+    #status {
+      min-height: 1.5em;
+      color: #c1ccff;
+    }
+
+    #gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    #gallery img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #252c3b;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 14px;
+      background: #10131a;
+      border-radius: 8px;
+    }
+
+    .stats span { color: #c1ccff; }
+  </style>
+</head>
+
+<body>
+<main>
+
+  <h1>Prueba de carga de imágenes</h1>
+
+  <p>
+    Herramienta de comprobación de solicitudes HTTP y carga de imágenes.
+  </p>
+
+  <div class="controls">
+
+    <label for="image-url">
+      URL de imagen
+      <input
+        id="image-url"
+        type="url"
+        value="https://images.unsplash.com/photo-1788204996799-e2472f7f3ef3?q=80&w=687&auto=format&fit=crop"
+      >
+    </label>
+
+    <label for="image-count">
+      Cantidad (1–100)
+      <input
+        id="image-count"
+        type="number"
+        min="1"
+        max="10000"
+        value="20"
+      >
+    </label>
+
+    <label for="interval">
+      Intervalo (ms)
+      <input
+        id="interval"
+        type="number"
+        min="1000"
+        max="10000"
+        value="1000"
+      >
+    </label>
+
+    <button id="load-button">Iniciar</button>
+    <button id="clear-button">Cancelar y limpiar</button>
+
+  </div>
+
+  <div class="stats">
+    <span>Solicitudes: <strong id="total">0</strong></span>
+    <span>Correctas: <strong id="loaded">0</strong></span>
+    <span>Errores: <strong id="failed">0</strong></span>
+  </div>
+
+  <p id="status" role="status" aria-live="polite">
+    Preparado.
+  </p>
+
+  <section id="gallery" aria-label="Imágenes generadas"></section>
+
+</main>
+
+<script>
+  const urlInput = document.querySelector("#image-url");
+  const countInput = document.querySelector("#image-count");
+  const intervalInput = document.querySelector("#interval");
+
+  const gallery = document.querySelector("#gallery");
+  const status = document.querySelector("#status");
+
+  const loadButton = document.querySelector("#load-button");
+  const clearButton = document.querySelector("#clear-button");
+
+  const totalElement = document.querySelector("#total");
+  const loadedElement = document.querySelector("#loaded");
+  const failedElement = document.querySelector("#failed");
+
+  let running = false;
+  let controller = null;
+  let objectURLs = [];
+
+  function updateStats(total, loaded, failed, count) {
+    totalElement.textContent = total;
+    loadedElement.textContent = loaded;
+    failedElement.textContent = failed;
+
+    status.textContent =
+      `Solicitudes: ${total}/${count} | ` +
+      `Correctas: ${loaded} | Errores: ${failed}`;
+  }
+
+  function clearImages() {
+    gallery.replaceChildren();
+
+    objectURLs.forEach(url => URL.revokeObjectURL(url));
+    objectURLs = [];
+  }
+
+  async function loadImage(url, index, signal) {
+    const imageURL = new URL(url);
+
+    imageURL.searchParams.set(
+      "_request",
+      crypto.randomUUID()
+    );
+
+    const response = await fetch(imageURL.href, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+      },
+      signal
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const blob = await response.blob();
+
+    if (!blob.type.startsWith("image/")) {
+      throw new Error("La respuesta no es una imagen");
+    }
+
+    const objectURL = URL.createObjectURL(blob);
+    objectURLs.push(objectURL);
+
+    const image = document.createElement("img");
+    image.alt = `Imagen ${index + 1}`;
+    image.src = objectURL;
+
+    return image;
+  }
+
+  loadButton.addEventListener("click", async () => {
+    if (running) return;
+
+    const url = urlInput.value.trim();
+    const count = Number(countInput.value);
+    const interval = Number(intervalInput.value);
+
+    try {
+      const parsedURL = new URL(url);
+
+      if (!["http:", "https:"].includes(parsedURL.protocol)) {
+        throw new Error();
+      }
+    } catch {
+      status.textContent = "Introduce una URL HTTP o HTTPS válida.";
+      return;
+    }
+
+    if (!Number.isInteger(count) || count < 1 || count > 10000) {
+      status.textContent = "Cantidad permitida: 1–10000.";
+      return;
+    }
+
+    if (!Number.isInteger(interval) ||
+        interval < 1 ||
+        interval > 10000) {
+      status.textContent = "Intervalo permitido: 1–10000 ms.";
+      return;
+    }
+
+    running = true;
+    controller = new AbortController();
+
+    clearImages();
+
+    loadButton.disabled = true;
+
+    let total = 0;
+    let loaded = 0;
+    let failed = 0;
+
+    status.textContent = "Iniciando...";
+
+    try {
+      for (let index = 0; index < count; index++) {
+        if (controller.signal.aborted) break;
+
+        total++;
+
+        try {
+          const image = await loadImage(
+            url,
+            index,
+            controller.signal
+          );
+
+          if (controller.signal.aborted) break;
+
+          gallery.append(image);
+          loaded++;
+
+        } catch (error) {
+          if (error.name === "AbortError") break;
+          failed++;
+        }
+
+        updateStats(total, loaded, failed, count);
+
+        if (index < count - 1 && !controller.signal.aborted) {
+          await new Promise(resolve =>
+            setTimeout(resolve, interval)
+          );
+        }
+      }
+
+    } finally {
+      running = false;
+      controller = null;
+      loadButton.disabled = false;
+
+      status.textContent =
+        `Finalizado | Solicitudes: ${total} | ` +
+        `Correctas: ${loaded} | Errores: ${failed}`;
+    }
+  });
+
+  clearButton.addEventListener("click", () => {
+    if (controller) {
+      controller.abort();
+    }
+
+    clearImages();
+
+    totalElement.textContent = "0";
+    loadedElement.textContent = "0";
+    failedElement.textContent = "0";
+
+    status.textContent = "Cancelando y limpiando...";
+  });
+
+</script>
+</body>
+</html>

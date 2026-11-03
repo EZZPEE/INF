@@ -6,8 +6,29 @@
   <meta name="theme-color" content="#75b8ff">
   <title>El tiempo en tu ubicación</title>
   <link rel="stylesheet" href="css/tiempo.css">
+  <style>
+    .back-link {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 50;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(8, 15, 21, 0.62);
+      color: #edf6ff;
+      text-decoration: none;
+      font-weight: 700;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+    }
+  </style>
 </head>
 <body data-weather="unknown" data-period="noon">
+  <a class="back-link" href="../index.html">← Volver al índice</a>
   <div class="sky-effects" id="sky-effects" aria-hidden="true">
     <div class="sky-orb" id="sky-orb"></div>
     <div class="sky-clouds"></div>

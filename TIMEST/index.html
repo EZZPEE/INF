@@ -50,6 +50,22 @@
       border-bottom: 1px solid var(--line);
     }
 
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.02);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
     .brand {
       display: flex;
       align-items: center;
@@ -746,6 +762,9 @@
 </head>
 <body>
   <div class="page-shell">
+    <div class="topbar" style="height:auto; padding-top:24px; border-bottom:0;">
+      <a class="back-link" href="../index.html">← Inicio</a>
+    </div>
     <header class="topbar">
       <div class="brand"><span class="brand-mark" aria-hidden="true">t</span> TIMEST</div>
       <div class="top-note"><span class="live-dot" aria-hidden="true"></span> Hora local en directo</div>

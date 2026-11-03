@@ -41,6 +41,23 @@
 		dt { color: var(--muted); }
 		dd { margin: 0; overflow-wrap: anywhere; text-align: right; }
 		footer { margin-top: 1.5rem; color: var(--muted); font-size: .85rem; }
+		.topbar {
+			width: min(1120px, 100% - 2rem);
+			margin: 0 auto;
+			padding: 1.25rem 0 0;
+		}
+		.back-link {
+			display: inline-flex;
+			align-items: center;
+			gap: .45rem;
+			padding: .7rem 1rem;
+			border-radius: 999px;
+			border: 1px solid var(--line);
+			background: rgba(255,255,255,0.04);
+			color: var(--accent);
+			text-decoration: none;
+			font-weight: 700;
+		}
 		@media (max-width: 480px) {
 			main { width: min(100% - 1.25rem, 1120px); padding: 2rem 0; }
 			dl { grid-template-columns: 1fr; gap: .15rem; }
@@ -49,6 +66,9 @@
 	</style>
 </head>
 <body>
+	<div class="topbar">
+		<a class="back-link" href="../index.html">← Volver al índice</a>
+	</div>
 	<main>
 		<header>
 			<span class="eyebrow">Panel del dispositivo</span>

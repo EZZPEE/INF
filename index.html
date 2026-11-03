@@ -18,6 +18,11 @@
       --primary-2: #7ec8ff;
       --gold: #f7c873;
       --shadow: rgba(0, 0, 0, 0.38);
+      --ambient-x: 18%;
+      --ambient-y: 16%;
+      --card-glow-x: 16%;
+      --card-glow-y: 12%;
+      --card-tilt: 120deg;
     }
 
     * { box-sizing: border-box; }
@@ -32,9 +37,10 @@
       font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(96, 231, 197, 0.14), transparent 25%),
-        radial-gradient(circle at bottom right, rgba(126, 200, 255, 0.14), transparent 30%),
+        radial-gradient(circle at var(--ambient-x) var(--ambient-y), rgba(96, 231, 197, 0.18), transparent 22%),
+        radial-gradient(circle at calc(100% - var(--ambient-x)) calc(100% - var(--ambient-y)), rgba(126, 200, 255, 0.18), transparent 26%),
         linear-gradient(135deg, var(--bg) 0%, var(--bg-2) 100%);
+      transition: background-position 0.35s ease;
     }
 
     a { color: inherit; text-decoration: none; }
@@ -204,25 +210,38 @@
       border: 1px solid var(--line);
       border-radius: 18px;
       background: linear-gradient(180deg, rgba(17, 35, 48, 0.9), rgba(10, 20, 28, 0.9));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 18px 36px rgba(0,0,0,0.12);
       transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
       overflow: hidden;
+      isolation: isolate;
     }
 
     .card::before {
       content: "";
       position: absolute;
-      inset: 0 auto auto 0;
-      width: 100%;
+      inset: 0;
+      background:
+        radial-gradient(circle at var(--card-glow-x) var(--card-glow-y), rgba(126, 200, 255, 0.38), transparent 26%),
+        linear-gradient(var(--card-tilt), rgba(255,255,255,0.12), transparent 52%);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
       height: 3px;
       background: linear-gradient(90deg, var(--primary), var(--primary-2), var(--gold));
       opacity: 0.9;
+      pointer-events: none;
     }
 
     .card:hover {
       transform: translateY(-4px);
       border-color: var(--line-strong);
-      box-shadow: 0 18px 36px rgba(0,0,0,0.2);
+      box-shadow: 0 22px 42px rgba(0,0,0,0.2);
     }
 
     .tag {
@@ -276,7 +295,25 @@
       }
     }
 
+    @media (orientation: landscape) and (max-height: 520px) {
+      :root {
+        --ambient-x: 28%;
+        --ambient-y: 26%;
+        --card-glow-x: 72%;
+        --card-glow-y: 20%;
+        --card-tilt: 155deg;
+      }
+    }
+
     @media (max-width: 640px) {
+      :root {
+        --ambient-x: 20%;
+        --ambient-y: 18%;
+        --card-glow-x: 22%;
+        --card-glow-y: 18%;
+        --card-tilt: 110deg;
+      }
+
       .shell {
         width: min(100% - 1rem, 1200px);
         padding-top: 1rem;

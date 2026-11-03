@@ -186,6 +186,10 @@
       margin: 2rem 0 1rem;
     }
 
+    body {
+      transition: background 0.45s ease;
+    }
+
     .section-title {
       margin: 0;
       font-size: 1.1rem;
@@ -432,5 +436,48 @@
       </a>
     </section>
   </div>
+
+  <script>
+    const root = document.documentElement;
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    function updateMotionVisuals(x, y) {
+      const ambientX = clamp(18 + x * 22, 8, 42);
+      const ambientY = clamp(16 + y * 20, 8, 36);
+      const glowX = clamp(18 + x * 24, 10, 72);
+      const glowY = clamp(16 + y * 22, 8, 38);
+      const tilt = 110 + x * 45;
+
+      root.style.setProperty('--ambient-x', `${ambientX}%`);
+      root.style.setProperty('--ambient-y', `${ambientY}%`);
+      root.style.setProperty('--card-glow-x', `${glowX}%`);
+      root.style.setProperty('--card-glow-y', `${glowY}%`);
+      root.style.setProperty('--card-tilt', `${tilt}deg`);
+    }
+
+    function handleOrientation(event) {
+      const gamma = clamp((Number(event.gamma || 0) / 30), -1, 1);
+      const beta = clamp((Number(event.beta || 0) / 35), -1, 1);
+      updateMotionVisuals(gamma, -beta);
+    }
+
+    function handlePointerMove(event) {
+      const x = clamp(((event.clientX / window.innerWidth) - 0.5) * 2, -1, 1);
+      const y = clamp(((event.clientY / window.innerHeight) - 0.5) * 2, -1, 1);
+      updateMotionVisuals(x, -y);
+    }
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+    }
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('orientationchange', () => {
+      const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+      updateMotionVisuals(isLandscape ? 0.7 : -0.2, isLandscape ? -0.3 : 0.2);
+    });
+
+    updateMotionVisuals(0, 0);
+  </script>
 </body>
 </html>
